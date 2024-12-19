@@ -33,6 +33,12 @@ export const register = async (req, res) => {
   { expiresIn: '1h' }  
 );
 
+  res.cookie('authToken', token, {
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production', 
+      maxAge: 3600000, 
+      sameSite: 'strict', 
+    });
 
     res.status(201).json({ token, message: 'User registered successfully' });
   } catch (error) {
@@ -56,8 +62,40 @@ export const login = async (req, res) => {
      console.log('User found:', user);
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
+    res.cookie('authToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', 
+      maxAge: 3600000, 
+      sameSite: 'strict', 
+    });
+
     res.status(200).json({ token, message: 'Login successful' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
+
+ export const logout =  async (req, res) => {
+  try {
+    res.clearCookie('authToken', {
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production', 
+      sameSite: 'strict', 
+    });
+
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Error destroying session:', err);
+          return res.status(500).json({ message: 'Error during logout' });
+        }
+      });
+    }
+
+    res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Error during logout:', error);
+    res.status(500).json({ message: 'Server error during logout', error: error.message });
+  }
+}

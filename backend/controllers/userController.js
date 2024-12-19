@@ -1,11 +1,8 @@
-// userController.mjs
+import User from '../models/User.model.js';  
 
-import User from '../models/User.model.js';  // Assuming you have a User model
-
-// Get user profile
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.userId);  // Assuming userId is added to the request after authentication
+    const user = await User.findById(req.userId);  
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -16,12 +13,11 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
-// Update user profile
 export const updateUserProfile = async (req, res) => {
   const { username, email } = req.body;
 
   try {
-    const user = await User.findById(req.userId);  // Assuming userId is added to the request after authentication
+    const user = await User.findById(req.userId); 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }

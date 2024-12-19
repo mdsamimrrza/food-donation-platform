@@ -1,17 +1,23 @@
-import Donation from '../models/Donation.model.js'; 
-import donationMiddleware from '../middleware/donationMiddleware.js';
+import Donation from '../models/Donation.model.js';
 
 export const createDonation = async (req, res) => {
+  console.log("Create Donation");
+  
   const { title, description, quantity, location, receiverId } = req.body;
-console.log('Token Payload:', { userId: user._id, role: user.role, email: user.email });
 
   try {
+    const donor = req.user?.userId; 
+
+    if (!donor) {
+      return res.status(401).json({ message: 'Unauthorized: Donor information is missing' });
+    }
+
     const newDonation = new Donation({
       title,
       description,
       quantity,
       location,
-      donor: req.user.userId, // The userId from the token
+      donor,
       receiver: receiverId || null,
       status: 'Pending',
     });
@@ -43,8 +49,13 @@ export const updateDonationStatus = async (req, res) => {
 
   try {
     const donation = await Donation.findById(req.params.id);
+
     if (!donation) {
       return res.status(404).json({ message: 'Donation not found' });
+    }
+
+    if (donation.donor.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'You are not authorized to update this donation' });
     }
 
     donation.status = status || donation.status;
@@ -52,6 +63,7 @@ export const updateDonationStatus = async (req, res) => {
 
     res.status(200).json({ message: 'Donation status updated', donation });
   } catch (error) {
+    console.error('Error updating donation:', error);
     res.status(500).json({ message: 'Server error', error });
   }
 };
